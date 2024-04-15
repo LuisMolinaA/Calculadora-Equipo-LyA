@@ -1,7 +1,10 @@
+# app/__init__.py
 from flask import Flask
-from .routes import bp  # Asegúrate de importar el Blueprint 'bp' que definiste en routes.py.
+from flask_cors import CORS
+from .routes import bp as api_bp
 
 def create_app():
     app = Flask(__name__)
-    app.register_blueprint(bp)  # Registra el Blueprint.
+    CORS(app, supports_credentials=True)
+    app.register_blueprint(api_bp)
     return app

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import ResultComponent from './components/ResultComponent';
+import ResultTokens from './components/ResultTokens';
 import KeyPadComponent from './components/KeyPadComponent';
 
 class App extends Component {
@@ -31,30 +32,40 @@ class App extends Component {
 
   calculate = () => {
     const operation = {
-      "expression":this.state.result,
-    }
-    console.log(operation)
-    const raw = JSON.stringify(operation);
-    fetch("http://127.0.0.1:5000/calculate", {
-      method: "POST",
-      mode: 'cors',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: raw,
-      redirect: "follow"
+        "expression": this.state.result,
+    };
+    fetch("http://127.0.0.1:5000/api/calculate", {
+        method: "POST",
+        mode: 'cors',
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(operation),
+        redirect: "follow"
     })
-      .then(response => response.text())
-      .then(data => {
-        this.setState({
-          result: data.result.result,
-          tokens: data.result.tokens
-        });
-      })
-      .catch(error => {
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            console.log(data)
+            this.setState({
+                result: data.result,
+                tokens: data.tokens
+            });
+            console.log(data.tokens)
+        } else {
+            throw new Error(data.error || 'Unknown error');
+        }
+    })
+    .catch(error => {
         console.error("Error:", error);
-      });
-  };
+        this.setState({ result: "Error", tokens: null });
+    });
+};
 
   reset = () => {
     this.setState({
@@ -74,8 +85,9 @@ class App extends Component {
       <div>
         <div className="calculator-body">
           <h1>Simple Calculator</h1>
-          <ResultComponent result={this.state.result} tokens={this.state.tokens} />
+          <ResultComponent result={this.state.result} />
           <KeyPadComponent onClick={this.onClick} />
+          <ResultTokens tokens= {this.state.tokens} />
         </div>
       </div>
     )
